@@ -1,0 +1,210 @@
+<html>
+<head>
+<meta charset="UTF-8">
+<!-- 最新版本的 Bootstrap 核心 CSS 文件 -->
+<link rel="stylesheet" href="../static/css/bootstrap.min.css"
+	th:href="@{/css/bootstrap.min.css}">
+<link rel="stylesheet" href="../static/css/tilple.css"
+	th:href="@{/css/tilple.css}">
+<link rel="stylesheet" href="../static/css/bootstrapValidator.min.css"
+	th:href="@{/css/bootstrapValidator.min.css}">
+<!-- 最新的 Bootstrap 核心 JavaScript 文件 -->
+<script src="../static/js/jquery.min.js" th:src="@{/js/jquery.min.js}"></script>
+<script src="../static/js/bootstrap.min.js"
+	th:src="@{/js/bootstrap.min.js}"></script>
+<script src="../static/js/tilpil.js" th:src="@{/js/tilpil.js}"></script>
+<script src="../static/js/bootstrapValidator.min.js"
+	th:src="@{/js/bootstrapValidator.min.js}"></script>
+<title>SFTP</title>
+</head>
+<body>
+	<span th:include="base::html"></span>
+	<div class="container">
+		<div class="row">
+			<h1 class="text-center">sftp用户</h1>
+			<hr>
+			<table width="100%">
+				<tr align="right">
+					<td>
+						<button type="button" class="btn btn-success" onclick="addUser()">添加用户</button>
+						<button type="button" class="btn btn-info" onclick="sftpRun()">开启sftp服务</button>
+						<button type="button" class="btn btn-warning" onclick="stopRun()">停止sftp服务</button>
+					</td>
+				</tr>
+			</table>
+			<table class="table table-striped table-bordered table-hover">
+				<thead style="background: silver;">
+					<tr align="center">
+						<td width="10%">序号</td>
+						<td width="40%">用户名</td>
+						<td width="40%">用户权限路径</td>
+						<td width="10%">操作</td>
+					</tr>
+				</thead>
+				<tbody id="tbody"></tbody>
+			</table>
+		</div>
+		<!-- 模态框（Modal） -->
+		<div class="modal fade" id="myModal2" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-header">
+						<button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+							&times;
+						</button>
+						<h4 class="modal-title" id="myModalLabel">
+							通知
+						</h4>
+					</div>
+					<div class="modal-body" id="modalBody">
+						
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-default" data-dismiss="modal">关闭
+						</button>
+					</div>
+				</div><!-- /.modal-content -->
+			</div><!-- /.modal -->
+		</div>
+		<!-- 模态框（Modal） -->
+		<div class="modal fade" id="myModal" tabindex="-1" role="dialog"
+			aria-labelledby="myModalLabel" aria-hidden="true">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-header">
+						<button type="button" class="close" data-dismiss="modal"
+							aria-hidden="true">&times;</button>
+						<h4 class="modal-title" id="myModalLabel">添加用户</h4>
+					</div>
+					<div class="modal-body" id="modalBody">
+					<form class="form-horizontal" method="post" id="fileFrom">
+						<div class="form-group">
+							<label for="exampleInputName2" class="col-sm-3 control-label">用户名</label>
+							<div class="col-sm-9">
+								<input type="text" class="form-control" id="name"
+									name="username" placeholder="用户名">
+							</div>
+						</div>
+						<div class="form-group">
+							<label for="inputPassword3" class="col-sm-3 control-label">密码</label>
+							<div class="col-sm-9">
+								<input type="password" class="form-control" id="password"
+									name="password" placeholder="Password">
+							</div>
+						</div>
+						<div class="form-group">
+							<label for="exampleInputName2" class="col-sm-3 control-label">用户权限url</label>
+							<div class="col-sm-9">
+								<input type="text" class="form-control" id="url" name="url"
+									placeholder="D:\log">
+							</div>
+						</div>
+						</form>
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-default" data-dismiss="modal" onclick="userAdd();">确定
+						</button>
+						<button type="button" class="btn btn-default" data-dismiss="modal">取消
+						</button>
+					</div>
+				</div>
+				<!-- /.modal-content -->
+			</div>
+			<!-- /.modal -->
+		</div>
+	</div>
+	<script th:inline="javascript">
+	 var logFlag = /*[[${logFlag}]]*/;
+	 var user = /*[[${users}]]*/;
+	 $(function() {// 初始化内容
+		 showUsers();
+	 });
+	 function addUser(){
+		 $('#myModal').modal('show');
+	 }
+	 function userAdd(){
+		 $.ajax({
+				type:"POST",
+				url:getBaseUrl()+"/addUser",
+				data:{
+					name : $('#name').val(),
+					password : $('#password').val(),
+					filePath : $('#url').val()
+				},
+				success : function(res) {
+					if("success" == res.code){
+						 $('#myModal').modal({
+							 show : false, 
+							 keyboard: true
+						 });
+						 showUsers();
+					}
+				}
+			})
+	 }
+	 function showUsers(){//getAllUser
+		 var tr = "";
+		 $.ajax({
+				type:"POST",
+				url:getBaseUrl()+"/getAllUser",
+				success : function(res) {
+					if("success" == res.code){
+						if(res.size>0){
+							$.each(res.data, function(i, val) {
+								tr = tr + htmlUser(i+1,val.name,val.filePath);
+								//console.info(tr);
+							});
+						}
+						$('#tbody').html(tr);
+					}
+				}
+			})
+	 }
+	 function htmlUser(i,name,url){
+		 var td1 = "<td>"+i+"</td>";
+		 var td2 = "<td>"+name+"</td>";
+		 var td3 = "<td>"+url+"</td>";
+		 var td4 = "<td><button type='button' class='btn btn-success btn-xs' onclick='deleteUser(this);'>删除用户</button></td></td>";
+		 return "<tr align='center'>"+td1+td2+td3+td4 + "</tr>";
+	 }
+	 
+	 function deleteUser(obj){
+		 var nameValue = $(obj).parent().parent().find("td:eq(1)").text();
+		 console.info(nameValue);
+		 $.ajax({
+				type:"POST",
+				url:getBaseUrl()+"/deleteUser",
+				data:{
+					name : nameValue
+				},
+				success : function(res) {
+					if("success" == res.code){
+						 showUsers();
+					}
+				}
+			})	 
+	 }
+	 
+	 function sftpRun(){
+		 $.ajax({
+				type:"POST",
+				url:getBaseUrl()+"/sftpRun",
+				success : function(res) {
+					$('#modalBody').html(res.msg);
+					$('#myModal2').modal('show');
+				}
+			})
+	 }
+	 function stopRun(){
+		 $.ajax({
+				type:"POST",
+				url:getBaseUrl()+"/stopRun",
+				success : function(res) {
+					$('#modalBody').html(res.msg);
+					$('#myModal2').modal('show');
+				}
+			})
+	 }
+	</script>
+</body>
+</html>
