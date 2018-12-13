@@ -1,5 +1,6 @@
 package cn.gst.ssh.controller;
 
+import java.io.File;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -33,10 +34,27 @@ public class SftpController {
 		logger.info("增加用户的方法正在执行,参数user:{}",user);
 		Map<String, Object> map = new HashMap<String, Object>();
 		try {
+			List<User> listUser = FileConfig.users;
+			for (User u : listUser) {
+				if(u.getName().equals(user.getName())) {
+					map.put("code", "fail");
+					map.put("msg", "用户名重复");
+					map.put("tip", "name");
+					return map;
+				}
+			}
+			File f = new File(user.getFilePath());
+			if(!f.exists()||!f.isDirectory()) {
+				map.put("code", "fail");
+				map.put("msg", "不是有效的目录!");
+				map.put("tip", "url");
+				return map;
+			}
 			service.addUser(user);
 		} catch (Exception e) {
 			logger.error("增加用户出错",e);
 			map.put("code", "fail");
+			map.put("msg", "系统出错,请联系管理员!");
 		}
 		map.put("code", "success");
 		return map;

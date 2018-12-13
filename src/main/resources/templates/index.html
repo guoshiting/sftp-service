@@ -21,7 +21,7 @@
 	<span th:include="base::html"></span>
 	<div class="container">
 		<div class="row">
-			<h1 class="text-center">sftp用户</h1>
+			<h1 class="text-center">sftp用户(服务端口22)</h1>
 			<hr>
 			<table width="100%">
 				<tr align="right">
@@ -45,26 +45,24 @@
 			</table>
 		</div>
 		<!-- 模态框（Modal） -->
-		<div class="modal fade" id="myModal2" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+		<div class="modal fade" id="myModal2" tabindex="-1" role="dialog"
+			aria-labelledby="myModalLabel" aria-hidden="true">
 			<div class="modal-dialog">
 				<div class="modal-content">
 					<div class="modal-header">
-						<button type="button" class="close" data-dismiss="modal" aria-hidden="true">
-							&times;
-						</button>
-						<h4 class="modal-title" id="myModalLabel">
-							通知
-						</h4>
+						<button type="button" class="close" data-dismiss="modal"
+							aria-hidden="true">&times;</button>
+						<h4 class="modal-title" id="myModalLabel">通知</h4>
 					</div>
-					<div class="modal-body" id="modalBody">
-						
-					</div>
+					<div class="modal-body" id="modalBody"></div>
 					<div class="modal-footer">
 						<button type="button" class="btn btn-default" data-dismiss="modal">关闭
 						</button>
 					</div>
-				</div><!-- /.modal-content -->
-			</div><!-- /.modal -->
+				</div>
+				<!-- /.modal-content -->
+			</div>
+			<!-- /.modal -->
 		</div>
 		<!-- 模态框（Modal） -->
 		<div class="modal fade" id="myModal" tabindex="-1" role="dialog"
@@ -77,35 +75,33 @@
 						<h4 class="modal-title" id="myModalLabel">添加用户</h4>
 					</div>
 					<div class="modal-body" id="modalBody">
-					<form class="form-horizontal" method="post" id="fileFrom">
-						<div class="form-group">
-							<label for="exampleInputName2" class="col-sm-3 control-label">用户名</label>
-							<div class="col-sm-9">
-								<input type="text" class="form-control" id="name"
-									name="username" placeholder="用户名">
+						<form class="form-horizontal" method="post" id="fileFrom">
+							<div class="form-group">
+								<label for="exampleInputName2" class="col-sm-3 control-label">用户名</label>
+								<div class="col-sm-9">
+									<input type="text" class="form-control" id="name"
+										 data-toggle="popover" name="username" placeholder="用户名" onblur="pop(this)">
+								</div>
 							</div>
-						</div>
-						<div class="form-group">
-							<label for="inputPassword3" class="col-sm-3 control-label">密码</label>
-							<div class="col-sm-9">
-								<input type="password" class="form-control" id="password"
-									name="password" placeholder="Password">
+							<div class="form-group">
+								<label for="inputPassword3" class="col-sm-3 control-label">密码</label>
+								<div class="col-sm-9">
+									<input type="password" class="form-control" id="password" onblur="pop1(this)" 
+										name="password" placeholder="Password">
+								</div>
 							</div>
-						</div>
-						<div class="form-group">
-							<label for="exampleInputName2" class="col-sm-3 control-label">用户权限url</label>
-							<div class="col-sm-9">
-								<input type="text" class="form-control" id="url" name="url"
-									placeholder="D:\log">
+							<div class="form-group">
+								<label for="exampleInputName2" class="col-sm-3 control-label">用户权限url</label>
+								<div class="col-sm-9">
+									<input type="text" class="form-control" id="url" name="url"  
+										placeholder="D:\log"> 
+								</div>
 							</div>
-						</div>
 						</form>
 					</div>
 					<div class="modal-footer">
-						<button type="button" class="btn btn-default" data-dismiss="modal" onclick="userAdd();">确定
-						</button>
-						<button type="button" class="btn btn-default" data-dismiss="modal">取消
-						</button>
+						<button type="button" class="btn btn-default" onclick="userAdd();">确定</button>
+						<button type="button" class="btn btn-default" data-dismiss="modal" onclick="quxiao();">取消</button>
 					</div>
 				</div>
 				<!-- /.modal-content -->
@@ -123,6 +119,15 @@
 		 $('#myModal').modal('show');
 	 }
 	 function userAdd(){
+		 var name = $('#name').val();
+		 var pwd = $('#password').val();
+		 var url = $('#url').val();
+		 if(isEnpty(name)||isEnpty(pwd)){
+			 pop($('#name').get(0));
+			 pop1($('#password').get(0));
+			// pop($('#url').get(0));
+			 return ;
+		 }
 		 $.ajax({
 				type:"POST",
 				url:getBaseUrl()+"/addUser",
@@ -137,10 +142,25 @@
 							 show : false, 
 							 keyboard: true
 						 });
+						 $('#myModal').modal('hide');
 						 showUsers();
+					}else{
+						var tip = '#'+res.tip;
+						//$(tip).popover('destroy');
+						$(tip).popover({
+							container: 'body',
+							content : res.msg
+						});
+						$(tip).popover('show');
+						addArray(res.tip);
 					}
 				}
 			})
+	 }
+	 function quxiao(){
+		 $('#name').popover('hide');
+		 $('#password').popover('hide');
+		 $('#url').popover('hide'); 
 	 }
 	 function showUsers(){//getAllUser
 		 var tr = "";
@@ -205,6 +225,40 @@
 				}
 			})
 	 }
+	 
+	 function pop(obj){
+		 var value = $(obj).val();
+		 if(isEnpty(value)){
+			 $(obj).popover({
+				 container: 'body',
+				 content : '不能为空!'
+			 });
+			 $(obj).popover('show');
+			 addArray($(obj).attr("id"))
+		 }else{
+			 $(obj).popover('hide');
+		 }
+	 }
+	 function pop1(obj){
+		 var value = $(obj).val();
+		 if(value == ''||value ==undefined || value == null ){
+			 $(obj).popover({
+				 container: 'body',
+				 content : '不能为空!'
+			 });
+			 $(obj).popover('show');
+			 addArray($(obj).attr("id"))
+		 }else{
+			 $(obj).popover('hide');
+		 }
+	 }
+	 
+	 function isEnpty(str,falg){
+		 if(str == ''||str ==undefined || str == null || $.trim(str) == ''){
+			 return true;
+		 }
+		 return false;
+	 } 
 	</script>
 </body>
 </html>
